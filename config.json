@@ -1,5 +1,7 @@
-[{
+[
+  {
   "configuration" : {
       "AppPathInstalation" : "C:\\PenBoot\\Apps"
+    }
   }
-}]
+]
