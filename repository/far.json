@@ -1,0 +1,34 @@
+{
+    "license": {
+        "identifier": "BSD-3-Clause",
+        "url": "https://farmanager.com/license.php"
+    },
+    "homepage": "https://farmanager.com/",
+    "description": "A text-mode files and archives manager.",
+    "version": "30b5656",
+    "architecture": {
+        "64bit": {
+            "url": "https://farmanager.com/files/Far30b5656.x64.20200822.7z",
+            "hash": "394826d81e8a9fa15ad348741f6e7116f7ceee08eacb8f9048e4b0de0d907314"
+        },
+        "32bit": {
+            "url": "https://farmanager.com/files/Far30b5656.x86.20200822.7z",
+            "hash": "8ead4cf5b44ab5ea3311ed7ab1a78c97862a1e34c147ccdbb8caa4afdda45be6"
+        }
+    },
+    "checkver": {
+        "url": "https://farmanager.com/download.php",
+        "re": "files/Far(?<version>[b\\d]+).x64.(?<date>\\d+).7z"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://farmanager.com/files/Far$version.x64.$matchDate.7z"
+            },
+            "32bit": {
+                "url": "https://farmanager.com/files/Far$version.x86.$matchDate.7z"
+            }
+        }
+    },
+    "bin": "far.exe"
+}

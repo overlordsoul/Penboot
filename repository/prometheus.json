@@ -1,0 +1,48 @@
+{
+    "version": "2.20.1",
+    "description": "Power your metrics and alerting with a leading open-source monitoring solution.",
+    "homepage": "https://prometheus.io/",
+    "license": "Apache-2.0",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/prometheus/prometheus/releases/download/v2.20.1/prometheus-2.20.1.windows-amd64.tar.gz",
+            "hash": "f5f70d5b45c92ee5a2fbcfd9fd4792290cf355fde4a393812d4189434d478298",
+            "extract_dir": "prometheus-2.20.1.windows-amd64"
+        },
+        "32bit": {
+            "url": "https://github.com/prometheus/prometheus/releases/download/v2.20.1/prometheus-2.20.1.windows-386.tar.gz",
+            "hash": "56e384cf03ad4872de78a12689f5c33a5c8a8182b36680db8cb4116bc7d2a1b7",
+            "extract_dir": "prometheus-2.20.1.windows-386"
+        }
+    },
+    "bin": [
+        [
+            "prometheus.exe",
+            "prometheus",
+            "--config.file $persist_dir/prometheus.yml"
+        ],
+        "promtool.exe"
+    ],
+    "persist": [
+        "data",
+        "prometheus.yml"
+    ],
+    "checkver": {
+        "github": "https://github.com/prometheus/prometheus"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/prometheus/prometheus/releases/download/v$version/prometheus-$version.windows-amd64.tar.gz",
+                "extract_dir": "prometheus-$version.windows-amd64"
+            },
+            "32bit": {
+                "url": "https://github.com/prometheus/prometheus/releases/download/v$version/prometheus-$version.windows-386.tar.gz",
+                "extract_dir": "prometheus-$version.windows-386"
+            }
+        },
+        "hash": {
+            "url": "https://github.com/prometheus/prometheus/releases/download/v$version/sha256sums.txt"
+        }
+    }
+}
