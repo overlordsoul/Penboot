@@ -14,10 +14,10 @@ function Start-PenBootRestore
         }
 
         $SelectedDiskNumber = Read-Host "Por Favor. Insira o número do disco"
-        $PathOfBackup = (Get-Partition -DiskNumber $SelectedDiskNumber).AccessPaths | Where-Object { $_.Contains(":\") };
+        $PathOfBackup = (Get-Partition -DiskNumber $SelectedDiskNumber).AccessPaths | Where-Object { if($_ -ne $null) {$_.Contains("D:\")}  };
 
         Write-Host "Copiando arquivos de backup para a sua nova HOME ($Env:USERPROFILE)..."
-        Copy-Item -Path $PathOfBackup -Destination $Env:USERPROFILE -Confirm:$false -Recurse -ErrorAction SilentlyContinue
+        #Copy-Item -Path $PathOfBackup -Destination $Env:USERPROFILE -Confirm:$false -Recurse -ErrorAction SilentlyContinue
 
         Write-Host "Procurando por pastas e configurações do PENBOOT... "
         $PenbootJsonFiles = Get-ChildItem -Recurse -Path $Env:USERPROFILE | Where-Object { $_.Name -like "*PENBOOT*.JSON" };
@@ -25,7 +25,7 @@ function Start-PenBootRestore
 
         foreach ($JsonFile in $PenbootJsonFiles) 
         {
-            if($JsonFile.Name -eq "SOFTWARES.JSON")
+            if($JsonFile.Name -eq "PENBOOT_SOFTWARES.JSON")
             {
                 $Config = Get-Content $JsonFile.FullName | ConvertFrom-Json -Depth 99
 
@@ -37,8 +37,9 @@ function Start-PenBootRestore
                 }
             }
         }
-        
-        $PenbootDriversInf | ForEach-Object { Write-Host "Instalando Script de Driver: $_" };
+
+        $PenbootDriversInf | ForEach-Object { Write-Host "Instalando Script de Driver: $($_)" };
+        Write-Host "PenBoot terminou a configuração!"
     }
 
 }
