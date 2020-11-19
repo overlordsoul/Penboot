@@ -18,29 +18,37 @@ Start-PenbootBackup
     #Export expecific drivers to path $Env:USERPROFILE\PENBOOT_USER_DRIVERS
     Export-WindowsDriver -Online -Path $Env:USERPROFILE -ErrorAction SilentlyContinue
 
-
     Write-Host "Computando o tamanho total do backup..."
     $TotalBackupSize = ((Get-ChildItem -Path $Env:USERPROFILE -Recurse -ErrorAction SilentlyContinue) | Measure-Object -Property Length -Sum).Sum
+    $PartitionBackupSizeToCreate = ($TotalBackupSize + ($TotalBackupSize * 0.10))
 
     Write-Host "Obtendo lista de dispositivos externos para realizar backup..."
-    Get-Disk | Where-Object {$_.Bustype -Eq "USB" -and $_.Size -gt $TotalBackupSize} | ForEach-Object { $UsbDevices.Add([System.Object]@{Name = $_.FriendlyName; Size = $_.Size}) }
+    Get-Disk | Where-Object {$_.Bustype -Eq "USB" -and $_.Size -gt $PartitionBackupSizeToCreate} | ForEach-Object { $UsbDevices.Add([System.Object]@{Name = $_.FriendlyName; Size = $_.Size; DiskNumber = $_.Number}) }
 
     if($UsbDevices.Count -gt 0)
     {
-        $DevicesCounter = 0;
-        $SelectedDevice = 0;
 
         Write-Host "Listando dispositivos para backup... "
         foreach($device in $UsbDevices)
         {
             $DevicesCounter = $DevicesCounter + 1
-            Write-Host "[$DevicesCounter] '$($device.Name)' tem o tamanho de $(($device.Size / 1GB).ToString("#.#"))";
+            Write-Host "[$($device.DiskNumber)] '$($device.Name)' tem o tamanho de $(($device.Size / 1GB).ToString("#.#"))";
         }
         
         #TODO: Add validation here 
+        $SelectedDiskNumber = Read-Host "Por Favor. Selecione o dispositivo acima que deseja realizar backup!"
+    
+        Write-Host -BackgroundColor Red -ForegroundColor Black ("Cuidado! Todos os dados do dispositivo serão apagados e será realizado backup neste disco!").ToUpper()
+        
+        $ConfirmDiskErase = Read-Host "Pressione [s] para sim ou [n] para não continuar"
 
-        $SelectedDevice = Read-Host "Por Favor. Selecione o dispositivo acima que deseja realizar backup!"
-        $SelectedDevice = $SelectedDevice - 1;
+        if($ConfirmDiskErase.ToLower().Contains("s"))
+        {
+           Clear-Disk -Number $SelectedDiskNumber -RemoveData
+           Initialize-Disk -Number $SelectedDiskNumber
+           New-Partition -DiskNumber $SelectedDiskNumber -UseMaximumSize
+        }
+        
     } 
     else 
     {
