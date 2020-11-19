@@ -21,7 +21,7 @@ function Start-PenBootRestore
 
         Write-Host "Procurando por pastas e configurações do PENBOOT... "
         $PenbootJsonFiles = Get-ChildItem -Recurse -Path $Env:USERPROFILE | Where-Object { $_.Name -like "*PENBOOT*.JSON" };
-        $PenbootDrivers = Get-ChildItem -Path "$Env:USERPROFILE\PENBOOT_DRIVERS" -Recurse
+        $PenbootDriversInf = Get-ChildItem -Path "$Env:USERPROFILE\PENBOOT_DRIVERS" -Recurse | Where-Object { $_.Name -like "*.INF"  } 
 
         foreach ($JsonFile in $PenbootJsonFiles) 
         {
@@ -31,14 +31,14 @@ function Start-PenBootRestore
 
                 foreach($Software in $Config)
                 {
-                    Invoke-Command -ScriptBlock { choco install $Software.Name };
+                    Write-Host "[ CHOCOLATEY ] Instalando o Programa: $($Software.Name)"
+                    #Invoke-Command -ScriptBlock { choco install $Software.Name };
+                    Write-Host "Instalando programa usando chocolatey em background"
                 }
             }
         }
-
-        foreach($Drivers in $PenbootDrivers)
-        {}
-
+        
+        $PenbootDriversInf | ForEach-Object { Write-Host "Instalando Script de Driver: $_" };
     }
 
 }

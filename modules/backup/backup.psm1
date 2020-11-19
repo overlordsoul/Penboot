@@ -24,7 +24,7 @@ function Start-PenbootBackup
             [void]$(New-Item -ItemType File -Path "$Env:USERPROFILE\PENBOOT_METADATA" -Name 'SOFTWARES.JSON' -Value $($InstalledSoftwaresObj | ConvertTo-Json -Depth 99) -Confirm:$false);
         } else {
             [void]$(New-Item -ItemType Directory -Name "PENBOOT_METADATA" -Path $Env:USERPROFILE -Confirm:$false);
-            [void]$(New-Item -ItemType File -Path "$Env:USERPROFILE\PENBOOT_METADATA" -Name 'SOFTWARES.JSON' -Value $($InstalledSoftwaresObj | ConvertTo-Json -Depth 99) -Confirm:$false);
+            [void]$(New-Item -ItemType File -Path "$Env:USERPROFILE\PENBOOT_METADATA" -Name 'PENBOOT_SOFTWARES.JSON' -Value $($InstalledSoftwaresObj | ConvertTo-Json -Depth 99) -Confirm:$false);
         }
 
         Write-Host "Criando backups de drivers para instalação posterior..."
