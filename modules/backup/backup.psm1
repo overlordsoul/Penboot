@@ -1,4 +1,5 @@
-function Get-HasElevatedUser {
+function Get-HasElevatedUser 
+{
     $Security = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent());
     return $Security.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator);
 }
@@ -18,12 +19,24 @@ function Start-PenbootBackup
         $InstalledSoftwares = Get-CimInstance -Class Win32_Product | Select-Object -Property Name, Version
         $InstalledSoftwares | ForEach-Object { $InstalledSoftwaresObj.Add([System.Object]@{Name = $_.Name; Version=$_.Version})}
 
-        [void]$(New-Item -ItemType File -Path $Env:USERPROFILE -Name 'PROGRAMAS_INSTALADOS_ANTERIOR.JSON' -Value $($InstalledSoftwaresObj | ConvertTo-Json -Depth 99) -Confirm:$false);
+        if((Test-Path -Path "$Env:USERPROFILE\PENBOOT_METADATA"))
+        {
+            [void]$(New-Item -ItemType File -Path "$Env:USERPROFILE\PENBOOT_METADATA" -Name 'SOFTWARES.JSON' -Value $($InstalledSoftwaresObj | ConvertTo-Json -Depth 99) -Confirm:$false);
+        } else {
+            [void]$(New-Item -ItemType Directory -Name "PENBOOT_METADATA" -Path $Env:USERPROFILE -Confirm:$false);
+            [void]$(New-Item -ItemType File -Path "$Env:USERPROFILE\PENBOOT_METADATA" -Name 'SOFTWARES.JSON' -Value $($InstalledSoftwaresObj | ConvertTo-Json -Depth 99) -Confirm:$false);
+        }
 
         Write-Host "Criando backups de drivers para instalação posterior..."
-        #Export expecific drivers to path $Env:USERPROFILE\PENBOOT_USER_DRIVERS
-        [void]$(New-Item -ItemType Directory -Name "PENBOOT_DRIVERS" -Path $Env:USERPROFILE -Confirm:$false)
-        [void]$(Export-WindowsDriver -Online -Destination "$Env:USERPROFILE\PENBOOT_DRIVERS" -ErrorAction SilentlyContinue -LogLevel 1)
+
+        if((Test-Path -Path "$Env:USERPROFILE\PENBOOT_DRIVERS"))
+        {
+            [void]$(Export-WindowsDriver -Online -Destination "$Env:USERPROFILE\PENBOOT_DRIVERS" -ErrorAction SilentlyContinue -LogLevel 1)
+        } else {
+            [void]$(New-Item -ItemType Directory -Name "PENBOOT_DRIVERS" -Path $Env:USERPROFILE -Confirm:$false)
+            [void]$(Export-WindowsDriver -Online -Destination "$Env:USERPROFILE\PENBOOT_DRIVERS" -ErrorAction SilentlyContinue -LogLevel 1)
+        }
+
 
         Write-Host "Computando o tamanho total do backup..."
         $TotalBackupSize = ((Get-ChildItem -Path $Env:USERPROFILE -Recurse -ErrorAction SilentlyContinue) | Measure-Object -Property Length -Sum).Sum
@@ -48,23 +61,29 @@ function Start-PenbootBackup
             Write-Host -BackgroundColor Red -ForegroundColor Black ("Cuidado! Todos os dados do dispositivo serão apagados e será realizado backup neste disco!").ToUpper()
             Write-Host -BackgroundColor Black -ForegroundColor White ""
 
-            $ConfirmDiskErase = Read-Host "Pressione [s] para sim ou [n] para não continuar"
+            $ConfirmDiskErase = Read-Host "Pressione [S] para sim ou [N] para não continuar"
 
             if($ConfirmDiskErase.ToLower().Contains("s"))
             {
-            Clear-Disk -Number $SelectedDiskNumber -RemoveData -Confirm:$false
-            Initialize-Disk -Number $SelectedDiskNumber -Confirm:$false
-            New-Partition -DiskNumber $SelectedDiskNumber -UseMaximumSize -AssignDriveLetter | Format-Volume -FileSystem NTFS -Confirm:$false 
-            
-            $PathToBackup = (Get-Partition -DiskNumber $SelectedDiskNumber).AccessPaths | Where-Object { $_?.Contains(":\")} 
 
-            Write-Host "Copiando arquivos de backup para o destino..."
-            Copy-Item -Path "C:\Users\$Env:USERNAME" -Destination $PathToBackup -Confirm:$false -Recurse -ErrorAction SilentlyContinue
+                Clear-Disk -Number $SelectedDiskNumber -RemoveData -Confirm:$false
+                Initialize-Disk -Number $SelectedDiskNumber -Confirm:$false
+                New-Partition -DiskNumber $SelectedDiskNumber -UseMaximumSize -AssignDriveLetter | Format-Volume -FileSystem NTFS -Confirm:$false 
+            
+                $PathToBackup = (Get-Partition -DiskNumber $SelectedDiskNumber).AccessPaths | Where-Object { $_.Contains(":\")} 
+
+                Write-Host "Copiando arquivos de backup para o destino..."
+                Copy-Item -Path "C:\Users\$Env:USERNAME" -Destination $PathToBackup -Confirm:$false -Recurse -ErrorAction SilentlyContinue
+                Write-Host "Backup finalizado em $PathToBackup"
+
+            } else {
+                Write-Host "Abortando a operação de Backup..."
             }
             
+            Write-Host "Encerrando backup..."
         } 
     } else {
-        return "Para rodar o backup é necessário estar em modo administrador!"; 
+        return "Para rodar o PenbootBackup é necessário estar em modo administrador!"; 
     }
  
 }
